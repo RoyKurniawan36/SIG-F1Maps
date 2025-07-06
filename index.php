@@ -129,7 +129,7 @@
           </div>
 
           <ul class="nav-links">
-            <li><a href="/modules/modules.php">Suprise :)</a></li>
+            <li><a href="/modules/modules.php">latest</a></li>
             <li><a href="/video">Video</a></li>
             <li><a href="/f1-unlocked">F1 Unlocked</a></li>
             <li><a href="/schedule">Schedule</a></li>
