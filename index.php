@@ -266,54 +266,54 @@
         </div>
       </section>
       <section class="race-grid" id="raceGrid">
-      <div class="race-container">
-        <?php
-        require_once 'connection.php';
-        $result = $pdo->query("SELECT * FROM races ORDER BY     date ASC");
-        $round = 1;
+          <div class="race-container">
+            <?php
+            require_once 'connection.php';
+            $result = $pdo->query("SELECT * FROM races    ORDER BY     date ASC");
+            $round = 1;
 
-        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
-          echo '<label class="race-flip">';
-          echo '<input type="checkbox" class="race-toggle" />';
-      
-          echo '<div class="race-card">';
-          echo '<div class="front">';
-      
-          // Header
-          echo '<div class="race-header">';
-          echo '<div class="race-round">Round ' . $round++ . '</div>';
-          echo '<div class="race-date">📅 ' . date("d M Y", strtotime($row['date'])) . '</div>';
-          echo '</div>';
-      
-          // Location and Title
-          echo '<div class="race-title">' . $row['title'] . '</div>';
-          echo '<div class="race-location-title">';
-          echo '<img class="race-flag" style="height: 24px;" src="resources/img/flags/' . $row['country'] . '.png" alt="Flag">';
-          echo '<span class="race-title">' . $row['location'] . '</span>';
-          echo '</div>';
-      
-          echo '<div class="race-full-title">' . $row['full_title'] . '</div>';
-      
-          echo '</div>'; // end .front
-      
-          // Back side (map)
-          echo '<div class="back">';
-          echo '<div class="map-preview-container">';
-          echo '<iframe
-                  width="100%"
-                  height="240"
-                  style="border:0"
-                  loading="lazy"
-                  allowfullscreen
-                  referrerpolicy="no-referrer-when-downgrade"
-                  src="https://www.google.com/maps?q=' . $row['latitude'] . ',' . $row['longitude'] . '&hl=es;z=14&output=embed">
-                </iframe>';
-          echo '</div>';
-          echo '</div>'; // end .back
-      
-          echo '</div>'; // end .race-card
-          echo '</label>';
-      }      
+            while ($row = $result->fetch    (PDO::FETCH_ASSOC)) {
+              echo '<label class="race-flip">';
+              echo '<input type="checkbox"    class="race-toggle" />';
+            
+              echo '<div class="race-card">';
+              echo '<div class="front">';
+            
+              // Header
+              echo '<div class="race-header">';
+              echo '<div class="race-round">Round ' .     $round++ . '</div>';
+              echo '<div class="race-date">📅 ' . date("d     M Y", strtotime($row['date'])) . '</div>';
+              echo '</div>';
+            
+              // Location and Title
+              echo '<div class="race-title">' . $row    ['title'] . '</div>';
+              echo '<div class="race-location-title">';
+              echo '<img class="race-flag" style="height:     24px;" src="resources/img/flags/' . $row    ['country'] . '.png" alt="Flag">';
+              echo '<span class="race-title">' . $row   ['location'] . '</span>';
+              echo '</div>';
+            
+              echo '<div class="race-full-title">' . $row   ['full_title'] . '</div>';
+            
+              echo '</div>'; // end .front
+            
+              // Back side (map)
+              echo '<div class="back">';
+              echo '<div class="map-preview-container">';
+              echo '<iframe
+                      width="100%"
+                      height="140"
+                      style="border:0"
+                      loading="lazy"
+                      allowfullscreen
+                      referrerpolicy="no-referrer-when-down   grade"
+                      src="https://www.google.com/maps?   q=' . $row['latitude'] . ',' . $row   ['longitude'] . '&hl=es;z=14&  output=embed">
+                    </iframe>';
+              echo '</div>';
+              echo '</div>'; // end .back
+            
+              echo '</div>'; // end .race-card
+              echo '</label>';
+            }      
           ?>
         </div>
       </section>
