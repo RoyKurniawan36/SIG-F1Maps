@@ -156,7 +156,29 @@ let popupTimeout = null;
 
 function showPopup(text, marker) {
   if (popupTimeout) clearTimeout(popupTimeout);
-  popup.innerHTML = text; // ✅ This renders the flag image
+
+  const lat = marker.userData.lat;
+  const lng = marker.userData.lng;
+
+  // Embed Google Maps iframe
+  const mapHTML = `
+  <iframe
+    width="250"
+    height="180"
+    frameborder="0"
+    style="border:0;margin-top:10px;border-radius:8px;"
+    src="https://www.google.com/maps?q=${lat},${lng}&hl=en&z=6&output=embed"
+    allowfullscreen>
+  </iframe>
+`;
+
+  popup.innerHTML = `
+    <div style="text-align:center;">
+      ${text}
+      ${mapHTML}
+    </div>
+  `;
+
   popup.style.display = "block";
   activeMarker = marker;
   updatePopupPos();
