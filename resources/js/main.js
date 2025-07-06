@@ -165,12 +165,6 @@ function showPopup(text, marker) {
   focusLight.position.copy(camera.position);
   focusLight.target.position.copy(marker.position);
   focusLight.intensity = 2;
-
-  popupTimeout = setTimeout(() => {
-    popup.style.display = "none";
-    activeMarker = null;
-    focusLight.intensity = 0;
-  }, 4000);
 }
 
 function updatePopupPos() {
