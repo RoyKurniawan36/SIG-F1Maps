@@ -1,6 +1,5 @@
-// main.js (must be used with <script type="module">)
 import * as THREE from "https://unpkg.com/three@0.155.0/build/three.module.js";
-import { OrbitControls } from "https://unpkg.com/three@0.155.0/examples/jsm/controls/OrbitControls.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 // Basic setup
 const scene = new THREE.Scene();
@@ -25,22 +24,62 @@ controls.minDistance = 3;
 controls.maxDistance = 20;
 
 // Lighting
-scene.add(new THREE.AmbientLight(0x404040, 0.4));
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-dirLight.position.set(5, 5, 5);
-scene.add(dirLight);
+const focusLight = new THREE.SpotLight(0xffffff, 0);
+focusLight.angle = Math.PI / 8;
+focusLight.penumbra = 0.2;
+scene.add(focusLight.target);
+
+const sunLight = new THREE.DirectionalLight(0xffffff, 1);
+scene.add(sunLight);
 
 // Earth
 const loader = new THREE.TextureLoader();
-const earthGeo = new THREE.SphereGeometry(2, 128, 128);
-const earthMat = new THREE.MeshPhongMaterial({
-  map: loader.load("../resources/img/8k_earth_daymap.jpg", () => {
-    document.getElementById("loading").style.display = "none";
-  }),
-  shininess: 100,
-  specular: 0x111111,
+const dayTexture = loader.load("../resources/img/8k_earth_daymap.jpg", () => {
+  document.getElementById("loading").style.display = "none";
 });
-const earth = new THREE.Mesh(earthGeo, earthMat);
+const nightTexture = loader.load("../resources/img/8k_earth_nightmap.jpg");
+
+// Custom shader material for day/night effect
+const earthMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    dayMap: { value: dayTexture },
+    nightMap: { value: nightTexture },
+    lightDirection: { value: new THREE.Vector3() },
+  },
+  vertexShader: `
+    varying vec3 vNormal;
+    varying vec2 vUv;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform sampler2D dayMap;
+    uniform sampler2D nightMap;
+    uniform vec3 lightDirection;
+    varying vec3 vNormal;
+    varying vec2 vUv;
+    
+    void main() {
+      vec3 dayColor = texture2D(dayMap, vUv).rgb;
+      vec3 nightColor = texture2D(nightMap, vUv).rgb;
+      
+      // Calculate how much the surface faces the light
+      float lightIntensity = dot(normalize(vNormal), lightDirection);
+      
+      // Blend between day and night based on light exposure
+      float blendFactor = smoothstep(-0.2, 0.2, lightIntensity);
+      vec3 color = mix(nightColor, dayColor, blendFactor);
+      
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `,
+});
+
+const earthGeo = new THREE.SphereGeometry(2, 128, 128);
+const earth = new THREE.Mesh(earthGeo, earthMaterial);
 scene.add(earth);
 
 // Stars
@@ -187,15 +226,6 @@ window.addEventListener("resize", () => {
 camera.position.set(0, 0, 6);
 camera.lookAt(0, 0, 0);
 
-// Animate
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
-  if (activeMarker) updatePopupPos();
-  renderer.render(scene, camera);
-}
-animate();
-
 // Load markers
 fetch("get_markers.php")
   .then((res) => res.json())
@@ -213,3 +243,24 @@ fetch("get_markers.php")
       { lat: -33.8688, lng: 151.2093, label: "Sydney" },
     ].forEach((m) => addMarker(m.lat, m.lng, m.label));
   });
+
+// Animate
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Update sun position for day/night cycle
+  const time = Date.now() * 0.0005;
+  sunLight.position.x = Math.sin(time) * 10;
+  sunLight.position.z = Math.cos(time) * 10;
+
+  // Update shader with current light direction
+  const lightDirection = sunLight.position.clone().normalize();
+  earthMaterial.uniforms.lightDirection.value.copy(lightDirection);
+
+  controls.update();
+  if (activeMarker) updatePopupPos();
+
+  renderer.render(scene, camera);
+}
+
+animate();
