@@ -156,12 +156,11 @@ let popupTimeout = null;
 
 function showPopup(text, marker) {
   if (popupTimeout) clearTimeout(popupTimeout);
-  popup.textContent = text;
+  popup.innerHTML = text; // ✅ This renders the flag image
   popup.style.display = "block";
   activeMarker = marker;
   updatePopupPos();
 
-  // Spotlight
   focusLight.position.copy(camera.position);
   focusLight.target.position.copy(marker.position);
   focusLight.intensity = 2;

@@ -163,6 +163,19 @@ canvas {
     border: 1px solid var(--primary-color);
     box-shadow: var(--shadow-primary);
     font-weight: 500;
+    height: 140px;
+    width: auto;
+}
+
+#markerPopup .label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+#markerPopup .label img {
+    height: 24px;
 }
 
 #markerPopup::before {
