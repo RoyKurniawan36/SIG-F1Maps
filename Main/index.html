@@ -1,22 +1,28 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <title>My first three.js app</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>F1 Race Calendar Globe</title>
     <style>
         body {
             margin: 0;
+        }
+
+        canvas {
+            display: block;
         }
     </style>
 </head>
 
 <body>
-    <!--
-    image source
-    http://www.shadedrelief.com/natural3/index.html 
-    -->
-    <script type="module" src="/main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/TrackballControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat.gui/0.7.6/dat.gui.min.js"></script>
+    <script src="/Main/main.js"></script>
 </body>
 
 </html>
