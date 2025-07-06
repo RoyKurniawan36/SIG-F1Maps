@@ -1,0 +1,38 @@
+
+<!-- Shared Google Map Overlay -->
+<div class="map-overlay" id="mapOverlay">
+  <div class="map-close-btn" onclick="closeGoogleMap()">✖</div>
+  <div class="map-fullscreen" id="googleMap"></div>
+</div>
+    </main>
+    <script src="resources/js/index.js"></script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAAgY3Vew0LpTLCBR_Sg98TKXrW_8Yk_4o&libraries=places&callback=initMap"></script>
+    <script>
+  let map;
+
+  function openGoogleMap(id, lat, lng, title) {
+    const overlay = document.getElementById('mapOverlay');
+    overlay.style.display = 'flex';
+
+    // Initialize or update map
+    if (!map) {
+      map = new google.maps.Map(document.getElementById("googleMap"), {
+        center: { lat: lat, lng: lng },
+        zoom: 14,
+      });
+    } else {
+      map.setCenter({ lat: lat, lng: lng });
+    }
+
+    new google.maps.Marker({
+      position: { lat: lat, lng: lng },
+      map: map,
+      title: title,
+    });
+  }
+
+  function closeGoogleMap() {
+    document.getElementById('mapOverlay').style.display = 'none';
+  }
+</script>

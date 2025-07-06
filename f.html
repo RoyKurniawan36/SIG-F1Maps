@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formula 1 Header</title>
+    <style>
+      /* Custom Fonts */
+      @font-face {
+        font-family: "Formula";
+        src: url("https://www.formula1.com/etc/designs/fom-website/fonts/Formula1-Regular_web_0.woff2")
+          format("woff2");
+        font-weight: normal;
+        font-style: normal;
+      }
+
+      @font-face {
+        font-family: "Titillium Web";
+        src: url("https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&display=swap");
+      }
+
+      /* Icomoon Font */
+      @font-face {
+        font-family: "icomoon";
+        src: url("https://www.formula1.com/etc/designs/fom-website/clientlibs/fom/f1/fonts/icomoon/fonts/icomoon.eot?1h2l1w");
+        src: url("https://www.formula1.com/etc/designs/fom-website/clientlibs/fom/f1/fonts/icomoon/fonts/icomoon.eot?1h2l1w#iefix")
+            format("embedded-opentype"),
+          url("https://www.formula1.com/etc/designs/fom-website/clientlibs/fom/f1/fonts/icomoon/fonts/icomoon.ttf?1h2l1w")
+            format("truetype"),
+          url("https://www.formula1.com/etc/designs/fom-website/clientlibs/fom/f1/fonts/icomoon/fonts/icomoon.woff?1h2l1w")
+            format("woff"),
+          url("https://www.formula1.com/etc/designs/fom-website/clientlibs/fom/f1/fonts/icomoon/fonts/icomoon.svg?1h2l1w#icomoon")
+            format("svg");
+        font-weight: normal;
+        font-style: normal;
+      }
+
+      /* Base Styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        font-family: "Titillium Web", sans-serif;
+        background: #fff;
+      }
+
+      /* Header Styles */
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 30;
+        width: 100%;
+        overflow: auto;
+      }
+
+      /* Skip to content */
+      .skip-content {
+        padding: 0.5rem;
+        background: #e10600;
+        color: white;
+        text-decoration: underline;
+        text-transform: uppercase;
+        position: absolute;
+        z-index: 50;
+        top: -4rem;
+        left: 2px;
+        width: max-content;
+        transition: top 0.3s ease;
+      }
+
+      .skip-content:focus {
+        top: 5px;
+      }
+
+      /* Mobile Header */
+      .nav-mobile {
+        width: 100%;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        padding: 5px 15px;
+        align-items: center;
+        gap: 1rem;
+        position: fixed;
+        background: #e10600;
+        z-index: 30;
+        top: 0;
+      }
+
+      @media (min-width: 1024px) {
+        .nav-mobile {
+          display: none;
+        }
+      }
+
+      /* Buttons */
+      .btn {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
+        border-radius: 5px;
+        cursor: pointer;
+        align-items: center;
+        transition: all 0.2s;
+        font-family: "Titillium Web";
+        font-weight: 600;
+        width: 100%;
+        min-width: max-content;
+        justify-content: center;
+        outline-offset: 2px;
+        outline: 3px solid transparent;
+      }
+
+      .btn:focus-visible {
+        outline-color: #15151e;
+      }
+
+      .btn:disabled {
+        pointer-events: none;
+        opacity: 0.75;
+        cursor: default;
+      }
+
+      .menu-btn {
+        width: 44px;
+        height: 44px;
+        background: #e10600;
+        color: white;
+        font-size: 24px;
+        aspect-ratio: 1/1;
+        justify-content: center;
+        box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.1);
+        text-transform: uppercase;
+      }
+
+      @media (min-width: 768px) {
+        .menu-btn {
+          height: 44px;
+          width: 54px;
+        }
+      }
+
+      .user-btn {
+        width: 44px;
+        height: 44px;
+        background: #15151e;
+        color: white;
+        font-size: 24px;
+        aspect-ratio: 1/1;
+        justify-content: center;
+        text-transform: uppercase;
+      }
+
+      @media (min-width: 768px) {
+        .user-btn {
+          height: 44px;
+          width: 54px;
+        }
+      }
+
+      /* Logo */
+      .logo {
+        display: block;
+        margin: 0 auto;
+        width: 192.1px;
+        height: 30px;
+      }
+
+      /* Desktop Header */
+      .nav-global,
+      .nav-primary {
+        display: none;
+      }
+
+      @media (min-width: 1024px) {
+        .nav-global,
+        .nav-primary {
+          display: block;
+        }
+
+        .nav-global {
+          width: 100%;
+          max-width: none;
+          padding: 0 10px;
+          background: white;
+          padding-bottom: 20px;
+        }
+
+        .nav-primary {
+          width: 100%;
+          background: #e10600;
+          padding-top: 70px;
+          padding-bottom: 20px;
+          z-index: 20;
+          height: 70px;
+        }
+      }
+
+      /* Global Navigation */
+      .global-nav {
+        display: grid;
+        grid-template-columns: auto max-content max-content;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 1320px;
+        padding: 3px 0;
+      }
+
+      .brand-links,
+      .commercial-links {
+        list-style: none;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
+        gap: 0;
+        align-items: center;
+      }
+
+      .brand-links li {
+        position: relative;
+        padding: 0 4px;
+        margin: 0 5px;
+      }
+
+      .brand-links li:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: -8px;
+        transform: translateY(-50%);
+        height: 25px;
+        width: 1px;
+        background: #d0d0d2;
+      }
+
+      .commercial-links li {
+        position: relative;
+        margin: 0 5px;
+      }
+
+      .commercial-links li:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: -8px;
+        transform: translateY(-50%);
+        height: 25px;
+        width: 1px;
+        background: #d0d0d2;
+      }
+
+      .commercial-link {
+        display: block;
+        padding: 8px 4px;
+        text-decoration: none;
+        color: #15151e;
+        text-transform: uppercase;
+        font-family: "Formula", sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+      }
+
+      .commercial-link:hover {
+        text-decoration: underline;
+        text-decoration-thickness: 3px;
+        text-underline-offset: 8px;
+        color: #e10600;
+      }
+
+      /* Auth Buttons */
+      .auth-buttons {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 6px;
+        margin: auto;
+        padding: 15px 0;
+      }
+
+      .signin-btn {
+        padding: 0 15px;
+        gap: 8px;
+        height: 39px;
+        background: #15151e;
+        color: white;
+        text-transform: uppercase;
+        font-size: 12px;
+      }
+
+      .subscribe-btn {
+        padding: 0 15px;
+        gap: 8px;
+        height: 39px;
+        background: #e10600;
+        color: white;
+        box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.1);
+        text-transform: uppercase;
+        font-size: 12px;
+      }
+
+      .subscribe-btn:hover {
+        background: white;
+        color: #15151e;
+      }
+
+      /* Primary Navigation */
+      .primary-nav {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 1320px;
+        height: 100%;
+      }
+
+      .desktop-logo {
+        display: block;
+        width: 190px;
+        height: 29.3px;
+        margin-right: 30px;
+      }
+
+      .primary-links {
+        display: grid;
+        list-style: none;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
+        gap: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .primary-links li {
+        width: max-content;
+        position: relative;
+      }
+
+      .primary-link {
+        display: grid;
+        height: 100%;
+        grid-template-columns: auto;
+        text-decoration: none;
+        color: white;
+        padding: 0 4px;
+        margin: 0;
+        font-family: "Formula", sans-serif;
+        font-weight: normal;
+        font-size: 12px;
+        text-align: center;
+        transition: all 0.2s;
+        outline: none;
+      }
+
+      .primary-link span {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: max-content;
+        gap: 6px;
+        width: 100%;
+        padding-bottom: 4px;
+        padding-top: 4px;
+        position: relative;
+        top: 6px;
+      }
+
+      .primary-link:hover {
+        text-decoration: underline;
+        text-decoration-thickness: 3px;
+        text-underline-offset: 8px;
+      }
+
+      /* Icon Font */
+      .icon-burger::before {
+        content: "\e908";
+        font-family: "icomoon";
+      }
+
+      .icon-user::before {
+        content: "\e971";
+        font-family: "icomoon";
+      }
+
+      .icon-chevron-right::before {
+        content: "\e904";
+        font-family: "icomoon";
+      }
+
+      .icon-chevron-down::before {
+        content: "\e905";
+        font-family: "icomoon";
+      }
+
+      /* Responsive adjustments */
+      @media (min-width: 1280px) {
+        .primary-link {
+          font-size: 14px;
+        }
+
+        .commercial-link {
+          font-size: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="grid fixed top-0 left-0 z-30 w-full overflow-auto">
+      <!-- Skip to content -->
+      <a href="#maincontent" class="skip-content">Skip to content</a>
+
+      <!-- Mobile Header -->
+      <section class="nav-mobile">
+        <button
+          aria-expanded="false"
+          class="btn menu-btn"
+          type="button"
+          aria-label="Toggle menu"
+        >
+          <span aria-hidden="true" class="icon-burger"></span>
+        </button>
+
+        <a class="logo-link" href="/" target="_self">
+          <img
+            alt="Formula 1"
+            class="logo"
+            src="https://media.formula1.com/image/upload/f_auto,c_limit,w_288,q_auto/f_auto/q_auto/fom-website/etc/designs/fom-website/images/F1_75_Logo"
+          />
+        </a>
+
+        <a
+          class="btn user-btn"
+          href="https://account.formula1.com/#/en/login"
+          target="_blank"
+        >
+          <span aria-hidden="true" class="icon-user"></span>
+        </a>
+      </section>
+
+      <!-- Desktop Global Navigation -->
+      <section class="nav-global">
+        <nav class="global-nav" aria-label="Global Navigation Menu">
+          <ul aria-label="Brand Links" class="brand-links">
+            <li>
+              <a href="https://www.fia.com/" target="_blank">
+                <img
+                  alt="FIA"
+                  width="37"
+                  height="25"
+                  src="https://media.formula1.com/image/upload/f_auto,c_limit,w_55,q_auto/etc/designs/fom-website/images/fia_logo"
+                />
+              </a>
+            </li>
+            <li>
+              <a href="https://www.fiaformula2.com/" target="_blank">
+                <span>F2™</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.fiaformula3.com/" target="_blank">
+                <span>F3™</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.f1academy.com/" target="_blank">
+                <span>F1 ACADEMY™</span>
+              </a>
+            </li>
+          </ul>
+
+          <ul aria-label="Commercial Links" class="commercial-links">
+            <li>
+              <a
+                class="commercial-link"
+                href="https://www.f1authentics.com/"
+                target="_blank"
+                >Authentics</a
+              >
+            </li>
+            <li>
+              <a
+                class="commercial-link"
+                href="https://f1store.formula1.com/"
+                target="_blank"
+                >Store</a
+              >
+            </li>
+            <li>
+              <a
+                class="commercial-link"
+                href="https://tickets.formula1.com"
+                target="_blank"
+                >Tickets</a
+              >
+            </li>
+            <li>
+              <a
+                class="commercial-link"
+                href="https://tickets.formula1.com/en/h-formula1-hospitality"
+                target="_blank"
+                >Hospitality</a
+              >
+            </li>
+            <li>
+              <a
+                class="commercial-link"
+                href="https://f1experiences.com/"
+                target="_blank"
+                >Experiences</a
+              >
+            </li>
+            <li>
+              <a
+                class="commercial-link"
+                href="https://f1tv.formula1.com"
+                target="_blank"
+              >
+                <img
+                  alt="F1® TV"
+                  width="75"
+                  height="12"
+                  src="https://media.formula1.com/image/upload/f_auto,c_limit,w_112,q_auto/nwp-navigation/f1-tv-logo"
+                />
+              </a>
+            </li>
+          </ul>
+
+          <div class="auth-buttons">
+            <a
+              class="btn signin-btn"
+              href="https://account.formula1.com/#/en/login"
+              target="_blank"
+            >
+              <span class="icon-user"></span>
+              <span>Sign In</span>
+            </a>
+            <a class="btn subscribe-btn" href="/subscribe-to-f1-tv">
+              <span>Subscribe</span>
+            </a>
+          </div>
+        </nav>
+      </section>
+
+      <!-- Desktop Primary Navigation -->
+      <section class="nav-primary">
+        <nav class="primary-nav" aria-label="Primary Navigation">
+          <a class="desktop-logo-link" href="/" target="_self">
+            <img
+              alt="Formula 1"
+              class="desktop-logo"
+              src="https://media.formula1.com/image/upload/f_auto,c_limit,w_285,q_auto/f_auto/q_auto/fom-website/etc/designs/fom-website/images/F1_75_Logo"
+            />
+          </a>
+
+          <ul class="primary-links">
+            <li>
+              <a
+                class="primary-link"
+                href="https://www.formula1.com/en/latest"
+                target="_self"
+              >
+                <span>
+                  <span>Latest</span>
+                  <span class="icon-chevron-down"></span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="primary-link"
+                href="https://www.formula1.com/en/video"
+                target="_self"
+              >
+                <span>
+                  <span>Video</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="primary-link"
+                href="https://www.formula1.com/en/page/discover-unlocked"
+                target="_self"
+              >
+                <span>
+                  <span>F1 Members' Area</span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="primary-link"
+                href="https://www.formula1.com/en/racing/2025"
+                target="_self"
+              >
+                <span>
+                  <span>Schedule</span>
+                  <span class="icon-chevron-down"></span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="primary-link"
+                href="https://www.formula1.com/en/results/2025/races"
+                target="_self"
+              >
+                <span>
+                  <span>Results</span>
+                  <span class="icon-chevron-down"></span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="primary-link"
+                href="https://www.formula1.com/en/drivers"
+                target="_self"
+              >
+                <span>
+                  <span>Drivers</span>
+                  <span class="icon-chevron-down"></span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="primary-link"
+                href="https://www.formula1.com/en/teams"
+                target="_self"
+              >
+                <span>
+                  <span>Teams</span>
+                  <span class="icon-chevron-down"></span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="primary-link"
+                href="https://www.formula1.com/en/page/gaming"
+                target="_self"
+              >
+                <span>
+                  <span>Gaming</span>
+                  <span class="icon-chevron-down"></span>
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="primary-link"
+                href="https://www.formula1.com/en/timing/f1-live"
+                target="_self"
+              >
+                <span>
+                  <span>Live Timing</span>
+                </span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </section>
+    </header>
+
+    <!-- Content below the header -->
+    <main
+      id="maincontent"
+      style="margin-top: 100px; padding: 20px; text-align: center"
+    >
+      <h1>Formula 1 Website</h1>
+      <p>Content would appear here...</p>
+    </main>
+
+    <script>
+      // Mobile menu toggle functionality
+      document.addEventListener("DOMContentLoaded", function () {
+        const menuBtn = document.querySelector(".menu-btn");
+
+        menuBtn.addEventListener("click", function () {
+          const expanded =
+            this.getAttribute("aria-expanded") === "true" || false;
+          this.setAttribute("aria-expanded", !expanded);
+
+          // In a real implementation, this would toggle a mobile menu
+          alert("Mobile menu would open here");
+        });
+
+        // Make header links functional
+        document.querySelectorAll('a[href="#"]').forEach((link) => {
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            alert("Navigation would occur here");
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

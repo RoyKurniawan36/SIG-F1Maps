@@ -1,0 +1,117 @@
+/* temp styles */
+/*
+.header-top {
+  background: var(--secondary-color);
+  color: var(--background-color);
+  display: none;
+  height: 3rem;
+  border-bottom: 1px solid var(--border-color);
+  width: 100%;
+  overflow: hidden;
+}
+
+.header-top-bar {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  align-items: center;
+  height: 100%;
+}
+
+.header-top-nav {
+  display: flex;
+  height: 3rem;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.header-top-nav ul {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  list-style: none;
+  gap: 0.25rem;
+}
+
+.header-top-nav .brand-links {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.header-top-nav .commercial-links {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.header-top-nav li {
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.header-top-nav a {
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: color var(--transition-duration);
+  color: var(--background-color);
+  display: inline-block;
+  overflow: hidden;
+  max-width: 100%;
+  padding: 0.2rem 0.4rem;
+}
+
+.header-top-nav a:hover {
+  color: var(--primary-color);
+}
+
+.header-top-nav img {
+  max-height: 14px;
+  width: auto;
+  vertical-align: middle;
+  display: inline-block;
+}
+
+.header-top-nav .profile-links {
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.header-top-nav .sign-in-link a,
+.header-top-nav .subscribe-link a {
+  background: var(--background-color);
+  color: var(--secondary-color);
+  border-radius: var(--border-radius);
+  transition: all var(--transition-duration);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.header-top-nav .subscribe-link a {
+  background: var(--primary-color);
+}
+
+.header-top-nav .sign-in-link a:hover {
+  background: var(--border-color);
+  color: var(--secondary-color);
+}
+
+.header-top-nav .subscribe-link a:hover {
+  background: transparent;
+  border: var(--primary-color) 2px solid;
+  color: var(--primary-color);
+}
+*/

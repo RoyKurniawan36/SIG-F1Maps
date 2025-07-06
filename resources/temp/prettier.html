@@ -1,0 +1,744 @@
+<?php
+require_once 'connection.php';
+session_start();
+
+// AJAX registration
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["register_ajax"])) {
+    $name = trim($_POST["name"] ?? "");
+    $email = filter_var(trim($_POST["email"] ?? ""), FILTER_SANITIZE_EMAIL);
+    $password = $_POST["password"] ?? "";
+    $errors = [];
+
+    if (empty($name)) {
+        $errors[] = "Name is required.";
+    } elseif (strlen($name) < 2) {
+        $errors[] = "Name must be at least 2 characters.";
+    }
+
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Valid email address is required.";
+    }
+
+    if (empty($password)) {
+        $errors[] = "Password is required.";
+    } elseif (strlen($password) < 6) {
+        $errors[] = "Password must be at least 6 characters.";
+    }
+
+    if (!empty($errors)) {
+        echo $errors[0];
+        exit;
+    }
+
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+    try {
+        $checkStmt = $pdo->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $checkStmt->execute([$email]);
+
+        if ($checkStmt->fetch()) {
+            echo "Email already registered.";
+            exit;
+        }
+
+        $stmt = $pdo->prepare("INSERT INTO users (name, email, password, created_at) VALUES (?, ?, ?, NOW())");
+        $result = $stmt->execute([$name, $email, $hashedPassword]);
+
+        if ($result) {
+            $userId = $pdo->lastInsertId();
+            $_SESSION["user_id"] = $userId;
+            $_SESSION["user_name"] = $name;
+            $_SESSION["user_email"] = $email;
+            $_SESSION["login_time"] = time();
+            echo "success";
+        } else {
+            echo "Registration failed. Please try again.";
+        }
+    } catch (PDOException $e) {
+        error_log("Registration error: " . $e->getMessage());
+        echo "Registration failed. Please try again.";
+    }
+    exit;
+}
+
+// AJAX login
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["login_ajax"])) {
+    $email = filter_var(trim($_POST["email"] ?? ""), FILTER_SANITIZE_EMAIL);
+    $password = $_POST["password"] ?? "";
+
+    if (empty($email) || empty($password)) {
+        echo "Please fill in both fields.";
+        exit;
+    }
+
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && password_verify($password, $user["password"])) {
+            $_SESSION["user_id"] = $user["id"];
+            $_SESSION["user_name"] = $user["name"];
+            $_SESSION["user_email"] = $user["email"];
+            $_SESSION["login_time"] = time();
+            echo "success";
+        } else {
+            echo "Incorrect email or password.";
+        }
+    } catch (PDOException $e) {
+        error_log("Login error: " . $e->getMessage());
+        echo "Login failed. Please try again.";
+    }
+    exit;
+}
+
+// User session and subscription fetch
+$isLoggedIn = isset($_SESSION['user_id']);
+$userData = null;
+$hasActiveSubscription = false;
+$subscriptionType = 'Free';
+$memberSince = '';
+$nextBilling = '';
+
+if ($isLoggedIn) {
+    try {
+        $stmt = $pdo->prepare("
+            SELECT u.*, s.status as subscription_status, s.type as subscription_type, 
+                   s.next_billing_date, u.created_at
+            FROM users u 
+            LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
+            WHERE u.id = ? LIMIT 1
+        ");
+        $stmt->execute([$_SESSION['user_id']]);
+        $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($userData) {
+            $hasActiveSubscription = $userData['subscription_status'] === 'active';
+            $subscriptionType = $userData['subscription_type'] ?? 'Free';
+            $memberSince = date('F j, Y', strtotime($userData['created_at']));
+            $nextBilling = $userData['next_billing_date'] ? date('F j, Y', strtotime($userData['next_billing_date'])) : '';
+        }
+    } catch (PDOException $e) {
+        error_log("Error fetching user data: " . $e->getMessage());
+    }
+}
+
+// Load race list
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["get_races"])) {
+    $stmt = $pdo->query("SELECT * FROM races ORDER BY date ASC");
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    exit;
+}
+
+// Save (Add or Update) race
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["save_race"])) {
+    $id = $_POST["race_id"] ?? "";
+    $fields = ["title", "full_title", "date", "location", "country", "latitude", "longitude", "map_url"];
+    $data = [];
+    foreach ($fields as $field) {
+        $data[$field] = trim($_POST[$field] ?? "");
+    }
+
+    try {
+        if ($id) {
+            $stmt = $pdo->prepare("UPDATE races SET title=?, full_title=?, date=?, location=?, country=?, latitude=?, longitude=?, map_url=? WHERE id=?");
+            $stmt->execute([...array_values($data), $id]);
+            echo json_encode(["success" => true, "message" => "Race updated."]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO races (title, full_title, date, location, country, latitude, longitude, map_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute(array_values($data));
+            echo json_encode(["success" => true, "message" => "Race added.", "id" => $pdo->lastInsertId()]);
+        }
+    } catch (PDOException $e) {
+        error_log("Save race error: " . $e->getMessage());
+        echo json_encode(["success" => false, "message" => "Database error occurred."]);
+    }
+    exit;
+}
+
+// Delete race
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["delete_race"])) {
+    try {
+        $stmt = $pdo->prepare("DELETE FROM races WHERE id = ?");
+        $stmt->execute([$_POST["race_id"]]);
+        echo "Race deleted.";
+    } catch (PDOException $e) {
+        error_log("Delete race error: " . $e->getMessage());
+        echo "Error deleting race.";
+    }
+    exit;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Account Management</title>
+  <meta name="description" content="F1 Account Management - Sign in, Register, and manage your F1 subscription" />
+
+  <!-- Optimized font loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- Optimized CSS loading -->
+  <link rel="stylesheet" href="resources/css/admin.css" />
+
+  <!-- Preload critical resources -->
+  <link rel="preload" href="resources/js/admin.js" as="script" />
+</head>
+
+<body>
+  <header>
+    <div class="site-header">
+      <div class="topSection">
+        <div class="logo">
+          <img
+            src="https://media.formula1.com/image/upload/f_auto,c_limit,w_285,q_auto/f_auto/q_auto/fom-website/etc/designs/fom-website/images/F1_75_Logo"
+            alt="F1 Logo" width="285" height="40" loading="eager" />
+        </div>
+        <?php if ($isLoggedIn): ?>
+        <div class="logout-wrapper" style="display: flex; align-items: center; gap: 1rem">
+          <span class="user-greeting">Welcome,
+            <strong>
+              <?= htmlspecialchars($_SESSION["user_name"]) ?>
+            </strong></span>
+        </div>
+        <?php endif; ?>
+      </div>
+      <nav class="nav-tabs" role="navigation" aria-label="Account navigation">
+        <ul>
+          <?php if (!$isLoggedIn): ?>
+          <li class="active">
+            <a href="#login" class="pagelinks login">Sign in</a>
+          </li>
+          <li><a href="#register" class="pagelinks register">Register</a></li>
+          <?php else: ?>
+          <li class="active">
+            <a href="#my-account" class="pagelinks my-account">My Account</a>
+          </li>
+          <li>
+            <a href="#subscription" class="pagelinks subscription">Subscription</a>
+          </li>
+          <li>
+            <a href="#order-history" class="pagelinks order-history">Order History</a>
+          </li>
+          <li>
+            <a href="#race-calendar" class="pagelinks race-calendar">Race Calendar</a>
+          </li>
+          <?php endif; ?>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="f1-account-site">
+    <div class="site-content">
+      <!-- Login Page -->
+      <div class="wrappers login-wrapper" style="display: <?= $isLoggedIn ? 'none' : 'block' ?>;">
+        <div class="loginForm custom-form">
+          <h1 class="form-heading">Login</h1>
+          <form id="loginform" method="post">
+            <div class="field alert alert-danger" role="alert" style="display: none">
+              <span class="control-label">Login failed. Please try again.</span>
+            </div>
+            <div class="field">
+              <label>Email address</label>
+              <input type="email" name="email" placeholder="Enter your email" required />
+            </div>
+            <div class="field password">
+              <label>Password</label>
+              <input type="password" name="password" placeholder="Enter your password" required />
+              <span class="eyeIcon eyeHide"></span>
+            </div>
+            <div class="actions">
+              <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Register Page -->
+      <section class="wrappers register-wrapper" style="display: <?= $isLoggedIn ? 'none' : 'none' ?>;"
+        aria-labelledby="register-heading">
+        <div class="registerForm custom-form">
+          <h1 id="register-heading" class="form-heading">Register</h1>
+          <form id="registerform" method="post" novalidate>
+            <div class="field alert alert-danger" role="alert" style="display: none">
+              <span class="control-label">Sorry something went wrong</span>
+            </div>
+            <div class="field">
+              <label for="register-name">Full Name</label>
+              <input type="text" id="register-name" placeholder="Enter your name" name="name" class="txtName" required
+                minlength="2" aria-describedby="register-name-error" />
+              <span id="register-name-error" class="error-msg" role="alert">Please enter your name</span>
+            </div>
+            <div class="field">
+              <label for="register-email">Email address</label>
+              <input type="email" id="register-email" placeholder="Enter your email" name="email" class="txtEmail"
+                required aria-describedby="register-email-error" />
+              <span id="register-email-error" class="error-msg" role="alert">Please enter valid email address</span>
+            </div>
+            <div class="field password">
+              <label for="register-password">Password</label>
+              <input type="password" id="register-password" placeholder="Create your password" name="password"
+                class="txtPassword" required minlength="6" aria-describedby="register-password-error" />
+              <span id="register-password-error" class="error-msg" role="alert">Password must be at least 6
+                characters</span>
+              <button type="button" class="eyeIcon eyeHide" aria-label="Toggle password visibility"></button>
+            </div>
+            <div class="actions">
+              <button type="submit" class="btn btn-primary">Register</button>
+            </div>
+            <div class="secondary-actions">
+              <span class="alreadyHaveAccount">Already have an account?</span>
+              <a href="#login" class="pagelinks link">Sign In</a>
+            </div>
+          </form>
+        </div>
+
+        <!-- Popup Confirmation -->
+        <div id="registerSuccessPopup" class="popup-overlay" style="display: none" role="dialog"
+          aria-labelledby="popup-heading" aria-modal="true">
+          <div class="popup-content">
+            <h2 id="popup-heading">Registration Successful!</h2>
+            <p>
+              Your account has been created. Would you like to add a
+              subscription?
+            </p>
+            <div class="popup-actions">
+              <button onclick="goToSubscription()" class="btn btn-success">
+                Yes, Add Subscription
+              </button>
+              <button onclick="closePopup()" class="btn btn-secondary">
+                No, Maybe Later
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- My Account Page -->
+      <section class="wrappers my-account-wrapper" style="display: <?= $isLoggedIn ? 'block' : 'none' ?>;"
+        aria-labelledby="account-heading">
+        <div class="accountForm custom-form">
+          <h1 id="account-heading" class="form-heading">My Account</h1>
+
+          <?php if ($isLoggedIn && $userData): ?>
+          <div class="account-name" style="text-align: center; margin-bottom: 2rem">
+            <span id="userName">
+              <?php echo htmlspecialchars($userData['name'], ENT_QUOTES, 'UTF-8'); ?>
+            </span>
+            <span class="premium-icon" id="premiumIcon"
+              style="<?php echo $hasActiveSubscription ? 'display: inline;' : 'display: none;'; ?> color: #ffd700; font-size: 1.5rem; margin-left: 10px;"
+              aria-label="Premium member">👑</span>
+          </div>
+
+          <div class="account-details" style="margin-bottom: 2rem">
+            <div class="field" style="
+                  margin-bottom: 1rem;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                ">
+              <span style="font-weight: 600">Email:</span>
+              <span id="userEmail">
+                <?php echo htmlspecialchars($userData['email'], ENT_QUOTES, 'UTF-8'); ?>
+              </span>
+            </div>
+            <div class="field" style="
+                  margin-bottom: 1rem;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                ">
+              <span style="font-weight: 600">Member Since:</span>
+              <span id="memberSince">
+                <?php echo htmlspecialchars($memberSince, ENT_QUOTES, 'UTF-8'); ?>
+              </span>
+            </div>
+            <div class="field" style="
+                  margin-bottom: 1rem;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                ">
+              <span style="font-weight: 600">Account Type:</span>
+              <span id="accountType">
+                <?php echo htmlspecialchars($subscriptionType, ENT_QUOTES, 'UTF-8'); ?>
+              </span>
+            </div>
+            <div class="field" style="
+                  margin-bottom: 1rem;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                ">
+              <span style="font-weight: 600">Subscription Status:</span>
+              <span class="subscription-status <?php echo $hasActiveSubscription ? 'status-active' : ''; ?>"
+                id="subscriptionStatus" style="
+                    padding: 4px 12px;
+                    border-radius: 12px;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                  ">
+                <span>●</span>
+                <?php echo $hasActiveSubscription ? 'Active' : 'Inactive'; ?>
+              </span>
+            </div>
+            <?php if ($hasActiveSubscription && $nextBilling): ?>
+            <div class="field" id="subscriptionDetails" style="
+                  display: flex;
+                  margin-bottom: 1rem;
+                  justify-content: space-between;
+                  align-items: center;
+                ">
+              <span style="font-weight: 600">Next Billing Date:</span>
+              <span id="nextBilling">
+                <?php echo htmlspecialchars($nextBilling, ENT_QUOTES, 'UTF-8'); ?>
+              </span>
+            </div>
+            <?php endif; ?>
+          </div>
+
+          <div class="actions" style="flex-direction: column; gap: 1rem">
+            <?php if (!$hasActiveSubscription): ?>
+            <a href="subscribe.php" class="btn btn-primary" id="upgradeBtn" style="width: 100%; text-align: center">
+              🚀 Upgrade to Premium
+            </a>
+            <?php else: ?>
+            <form method="post" action="cancel_subscription.php" style="width: 100%">
+              <button type="submit" class="btn" id="cancelBtn" style="width: 100%; background: #dc3545; color: white"
+                onclick="return confirm('Are you sure you want to cancel your subscription?')">
+                ❌ Cancel Subscription
+              </button>
+            </form>
+            <?php endif; ?>
+            <a href="edit_profile.php" class="btn" style="
+                  width: 100%;
+                  background: #6c757d;
+                  color: white;
+                  text-align: center;
+                ">
+              ✏️ Edit Profile
+            </a>
+          </div>
+
+          <div class="secondary-actions">
+            <a href="#" class="logout link" onclick="logout(); return false;">Sign Out</a>
+          </div>
+
+          <?php elseif ($isLoggedIn && !$userData): ?>
+          <div style="text-align: center; padding: 2rem">
+            <p style="margin-bottom: 1rem; color: #dc3545">
+              Error loading account data. Please try refreshing the page.
+            </p>
+            <button onclick="window.location.reload()" class="btn btn-primary">
+              Refresh Page
+            </button>
+          </div>
+          <?php else: ?>
+          <div style="text-align: center; padding: 2rem">
+            <p style="margin-bottom: 1rem">
+              Please log in to view your account details.
+            </p>
+            <a href="#login" class="pagelinks btn btn-primary">Sign In</a>
+          </div>
+          <?php endif; ?>
+        </div>
+      </section>
+
+      <!-- Subscription Page Placeholder -->
+      <section class="wrappers subscription-wrapper" style="display: none" aria-labelledby="subscription-heading">
+        <div class="subscriptionForm custom-form">
+          <h1 id="subscription-heading" class="form-heading">
+            Subscription Management
+          </h1>
+          <div style="text-align: center; padding: 2rem">
+            <p>Subscription management features will be available here.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Order History Page Placeholder -->
+      <section class="wrappers order-history-wrapper" style="display: none" aria-labelledby="order-history-heading">
+        <div class="orderHistoryForm custom-form">
+          <h1 id="order-history-heading" class="form-heading">
+            Order History
+          </h1>
+          <div style="text-align: center; padding: 2rem">
+            <p>Order history will be displayed here.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Race Calendar Manager -->
+      <section class="wrappers race-calendar-wrapper" style="display: none" aria-labelledby="race-calendar-heading">
+        <div class="race-calendar custom-form">
+          <h1 id="race-calendar-heading" class="form-heading">
+            Race Calendar Manager
+          </h1>
+          <div class="actions" style="justify-content: flex-end">
+            <button class="btn btn-primary" onclick="openRacePopup()">
+              + Add New Race
+            </button>
+          </div>
+          <table class="race-table" style="width: 100%; margin-top: 1rem">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Location</th>
+                <label for="country">Country</label>
+                <select name="country" id="country" onchange="updateFlagPreview()">
+                  <option value="us">🇺🇸 United States</option>
+                  <option value="fr">🇫🇷 France</option>
+                  <option value="it">🇮🇹 Italy</option>
+                  <option value="gb">🇬🇧 United Kingdom</option>
+                  <option value="jp">🇯🇵 Japan</option>
+                  <option value="de">🇩🇪 Germany</option>
+                  <option value="es">🇪🇸 Spain</option>
+                </select>
+                <div id="flagPreview" style="margin-top:5px;">
+                  <img id="flagImage" src="resources/img/flags/us.png" alt="Flag" style="height: 24px;">
+                </div>
+              </tr>
+            </thead>
+            <tbody id="raceTableBody">
+              <!-- Race rows inserted by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Popup Overlay -->
+      <div id="racePopup" class="popup-overlay" style="display: none;">
+        <div class="popup-content">
+          <h2 id="popupTitle" class="popup-title">Add/Edit Race</h2>
+
+          <form id="raceForm" class="custom-form">
+            <input type="hidden" name="race_id" id="race_id" />
+            <input type="hidden" name="save_race" value="1" />
+
+            <div class="field">
+              <label for="title" class="field-label">Title *</ label>
+                <input type="text" class="field-input" id="title" name="title" required />
+            </div>
+
+            <div class="field">
+              <label for="full_title" class="field-label">Full Title</label>
+              <input type="text" class="field-input" id="full_title" name="full_title" />
+            </div>
+
+            <div class="field">
+              <label for="date" class="field-label">Date *</ label>
+                <input type="date" class="field-input" id="date" name="date" required />
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="location" class="field-label">Location *</label>
+                <input type="text" class="field-input" id="location" name="location" required />
+              </div>
+              <div class="field">
+                <label for="country" class="field-label">Country *</label>
+                <input type="text" class="field-input" id="country" name="country" required />
+              </div>
+            </div>
+
+            <div class="search-wrapper">
+              <label for="searchBox" class="field-label">Search Location</label>
+
+              <div class="search-input">
+                <span class="search-icon">
+                  <svg viewBox="0 0 24 24" fill="none" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M21 21L15.8 15.8M18 10.5C18 14.0899 15 17 11.5 17C7.91015 17 5 14.0899 5 10.5C5 6.91015 7.91015 4 11.5 4C15.0899 4 18 6.91015 18 10.5Z"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <input type="text" id="searchBox" class="search-input-field"
+                  placeholder="Search circuit, city, country..." />
+              </div>
+            </div>
+            <div class="map-container" id="map"></div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="latitude" class="field-label">Latitude</label>
+                <input type="text" class="field-input" id="latitude" name="latitude" readonly />
+              </div>
+              <div class="field">
+                <label for="longitude" class="field-label">Longitude</label>
+                <input type="text" class="field-input" id="longitude" name="longitude" readonly />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="map_url" class="field-label">Map URL</label>
+              <input type="url" class="field-input" id="map_url" name="map_url" placeholder="https://..." />
+            </div>
+
+            <div class="popup-actions">
+              <button type="button" class="btn btn-secondary" onclick="closeRacePopup()">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Race</button>
+              <button type="button" class="btn btn-danger" onclick="deleteRace()">Delete Race</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Forgot Password Page -->
+      <section class="wrappers forgetPassword-wrapper" style="display: none" aria-labelledby="forgot-password-heading">
+        <div class="forgotPasswordForm custom-form">
+          <h1 id="forgot-password-heading" class="form-heading">
+            Reset your password
+          </h1>
+          <form id="forgetPasswordForm" method="post" action="reset_password.php" novalidate>
+            <div class="field alert alert-danger" role="alert" style="display: none">
+              <span class="control-label">Sorry something went wrong</span>
+            </div>
+            <div class="field">
+              <span class="form-context">To reset your password, please enter your email address
+                below</span>
+            </div>
+            <div class="field">
+              <label for="reset-email">Email address</label>
+              <input type="email" id="reset-email" name="email" class="txtEmail" placeholder="Email address" required
+                aria-describedby="reset-email-error" />
+              <span id="reset-email-error" class="error-msg" role="alert">Please enter valid email address</span>
+            </div>
+            <div class="actions">
+              <a href="#login" class="pagelinks link backtologin">Back to Sign In</a>
+              <button type="submit" class="btn btn-primary">
+                Reset password
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Loading Screen -->
+      <div class="loading" role="status" aria-label="Loading">
+        <div class="loader">
+          <div class="sk-circle">
+            <div class="sk-circle1 sk-child"></div>
+            <div class="sk-circle2 sk-child"></div>
+            <div class="sk-circle3 sk-child"></div>
+            <div class="sk-circle4 sk-child"></div>
+            <div class="sk-circle5 sk-child"></div>
+            <div class="sk-circle6 sk-child"></div>
+            <div class="sk-circle7 sk-child"></div>
+            <div class="sk-circle8 sk-child"></div>
+            <div class="sk-circle9 sk-child"></div>
+            <div class="sk-circle10 sk-child"></div>
+            <div class="sk-circle11 sk-child"></div>
+            <div class="sk-circle12 sk-child"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Optimized script loading -->
+  <script src="resources/js/admin.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js"></script>
+  <script src="vendor/jquery/jquery.form.js"></script>
+  <script>
+    // Global logout function
+    function logout() {
+      if (confirm("Are you sure you want to logout?")) {
+        window.location.href = "logout.php";
+      }
+    }
+  </script>
+  <!-- Google Maps API (with Places Library) -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAAgY3Vew0LpTLCBR_Sg98TKXrW_8Yk_4o&libraries=places&callback=initMap"></script>
+  <script>
+    let map, marker;
+
+    function openRacePopup() {
+      document.getElementById("racePopup").style.display = "flex";
+      document.getElementById("raceForm").reset();
+      document.getElementById("popupTitle").textContent = "Add New Race";
+      setTimeout(() => {
+        if (typeof google !== "undefined") {
+          google.maps.event.trigger(map, "resize");
+        }
+      }, 300);
+    }
+
+    function closeRacePopup() {
+      document.getElementById("racePopup").style.display = "none";
+    }
+
+    function initMap() {
+      const defaultLatLng = { lat: -8.676488, lng: 115.   211177 };
+
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: defaultLatLng,
+        zoom: 12,
+        mapTypeId: "roadmap",
+      });
+
+      const trafficLayer = new google.maps.TrafficLayer();
+      trafficLayer.setMap(map);
+
+      map.addListener("click", function (e) {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+
+        if (marker) marker.setMap(null);
+        marker = new google.maps.Marker({
+          map,
+          position: e.latLng,
+        });
+
+        document.getElementById("latitude").value = lat.toFixed(6);
+        document.getElementById("longitude").value = lng.toFixed(6);
+      });
+
+      const input = document.getElementById("searchBox");
+      const searchBox = new google.maps.places.SearchBox(input);
+      map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+      map.addListener("bounds_changed", () => {
+        searchBox.setBounds(map.getBounds());
+      });
+
+      searchBox.addListener("places_changed", () => {
+        const places = searchBox.getPlaces();
+        if (!places.length) return;
+
+        const bounds = new google.maps.LatLngBounds();
+
+        places.forEach((place) => {
+          if (!place.geometry) return;
+
+          if (marker) marker.setMap(null);
+          marker = new google.maps.Marker({
+            map,
+            position: place.geometry.location,
+          });
+
+          document.getElementById("latitude").value = place.geometry.location.lat().toFixed(6);
+          document.getElementById("longitude").value = place.geometry.location.lng().toFixed(6);
+
+          if (place.geometry.viewport) {
+            bounds.union(place.geometry.viewport);
+          } else {
+            bounds.extend(place.geometry.location);
+          }
+        });
+
+        map.fitBounds(bounds);
+      });
+    }
+    window.initMap = initMap;
+  </script>
+</body>
+
+</html>

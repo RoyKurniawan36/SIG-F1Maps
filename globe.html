@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>3D Earth Globe with Markers</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #infoBox {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            pointer-events: none;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="infoBox">Click a marker...</div>
+    <script type="module">
+
+        import { OrbitControls } from '/resources/js/OrbitControls.js';
+        import * as THREE from 'https://cdn.skypack.dev/three@0.155.0';
+
+        let scene, camera, renderer, controls;
+        let globe;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2();
+        let markers = [];
+        const infoBox = document.getElementById('infoBox');
+
+        // Sample database race data (lat, lon in degrees)
+        const raceData = [
+            { title: 'São Paulo Grand Prix', lat: -23.5505, lon: -46.6333 },
+            { title: 'Singapore Grand Prix', lat: 1.3521, lon: 103.8198 },
+            { title: 'Monaco Grand Prix', lat: 43.7384, lon: 7.4246 },
+            // Add other races...
+        ];
+
+        init();
+        animate();
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, 3.5);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            controls = new OrbitControls(camera, renderer.domElement);
+
+            window.addEventListener('resize', onWindowResize);
+            renderer.domElement.addEventListener('click', onMouseClick);
+
+            createLights();
+            createGlobe();
+            loadRaceMarkers();
+        }
+
+        function createLights() {
+            const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+            scene.add(hemi);
+            const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+            dir.position.set(5, 3, 5);
+            scene.add(dir);
+        }
+
+        function createGlobe() {
+            const geometry = new THREE.SphereGeometry(1, 64, 64);
+            const loader = new THREE.TextureLoader();
+
+            const texture = loader.load('https://planetpixelemporium.com/earth/earthmap4k.jpg');
+            const bump = loader.load('https://planetpixelemporium.com/earth/earthbump4k.jpg');
+            const spec = loader.load('https://planetpixelemporium.com/earth/earthspec4k.jpg');
+
+            const material = new THREE.MeshPhongMaterial({
+                map: texture,
+                bumpMap: bump,
+                bumpScale: 0.05,
+                specularMap: spec,
+                specular: new THREE.Color('grey'),
+                shininess: 10
+            });
+
+            globe = new THREE.Mesh(geometry, material);
+            scene.add(globe);
+
+            const atmos = new THREE.Mesh(
+                new THREE.SphereGeometry(1.02, 32, 32),
+                new THREE.MeshBasicMaterial({
+                    color: 0x4fc3f7, transparent: true,
+                    opacity: 0.1, side: THREE.BackSide
+                })
+            );
+            scene.add(atmos);
+        }
+
+        function latLngToXYZ(lat, lon, radius = 1) {
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lon + 180) * (Math.PI / 180);
+            const x = -radius * Math.sin(phi) * Math.cos(theta);
+            const z = radius * Math.sin(phi) * Math.sin(theta);
+            const y = radius * Math.cos(phi);
+            return new THREE.Vector3(x, y, z);
+        }
+
+        function loadRaceMarkers() {
+            raceData.forEach(race => {
+                const pos = latLngToXYZ(race.lat, race.lon);
+                const geo = new THREE.SphereGeometry(0.02, 12, 12);
+                const mat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+                const marker = new THREE.Mesh(geo, mat);
+                marker.position.copy(pos);
+                marker.userData = { title: race.title };
+                scene.add(marker);
+                markers.push(marker);
+            });
+        }
+
+        function onMouseClick(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(markers);
+            if (intersects.length > 0) {
+                infoBox.textContent = intersects[0].object.userData.title;
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,657 @@
+@import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&display=swap");
+
+:root {
+  --font-family: "Chakra Petch", sans-serif;
+  --primary-color: #e10600;
+  --secondary-color: #fff;
+  --background-color: #15151e;
+  --text-color: #fff;
+  --border-color: #222;
+  --hover-color: #b80000;
+  --active-color: #ff2d2d;
+  --error-color: #ff4d4d;
+  --success-color: #27ae60;
+  --warning-color: #ff9800;
+  --info-color: #e10600;
+  --font-size: 16px;
+  --line-height: 1.5;
+  --border-radius: 4px;
+  --transition-duration: 0.3s;
+  --shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--background-color);
+  color: var(--text-color);
+  overflow-x: hidden;
+}
+
+/* Header Styles */
+header {
+  position: relative;
+  z-index: 1000;
+  background-color: var(--primary-color);
+}
+
+.nav-global {
+  background-color: var(--secondary-color);
+  padding: 0.5rem 2rem;
+  width: 100%;
+}
+
+.global-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.g-brand-links,
+.g-commercial-links {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  list-style: none;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.g-brand-links li a {
+  color: var(--background-color);
+  text-decoration: none;
+}
+
+.g-commercial-links li a {
+  color: var(--background-color);
+  text-decoration: none;
+  position: relative;
+}
+
+.g-commercial-links li a::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--primary-color);
+  transform-origin: bottom right;
+  transition: transform var(--transition-duration) ease-out;
+}
+
+.g-commercial-links li a:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+.g-auth-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  border-radius: var(--border-radius);
+  font-weight: 600;
+}
+
+.signin-btn {
+  background: var(--background-color);
+  color: var(--secondary-color);
+}
+
+.subscribe-btn {
+  background: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+/* Nav Main */
+.nav-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.main-nav {
+  padding: 0.5rem 2rem;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.nav-links li a {
+  color: var(--secondary-color);
+  text-decoration: none;
+  position: relative;
+  transition: background-color var(--transition-duration);
+}
+
+.nav-links li a::after {
+  content: "";
+  border-radius: var(--border-radius);
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 5px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--background-color);
+  transform-origin: bottom right;
+  transition: transform var(--transition-duration) ease-out;
+}
+
+.nav-links li a:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+
+/* Overlay Menu */
+.overlay-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  transform: translateX(-100%);
+  transition: transform 0.4s ease-in-out;
+  z-index: 999;
+  overflow-y: auto;
+}
+
+.menu-open .overlay-menu {
+  transform: translateX(0);
+}
+
+.overlay-menu-content {
+  padding: 2rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.overlay-menu .logo {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-top: 2rem;
+}
+
+.overlay-menu .logo img {
+  height: 40px;
+}
+
+/* Global Navigation in Overlay */
+.overlay-global-nav {
+  margin-bottom: 2rem;
+}
+
+.overlay-global-nav h3 {
+  color: var(--primary-color);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.brand-links,
+.commercial-links {
+  margin-top: 15px;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  list-style: none;
+}
+
+.brand-links li,
+.commercial-links li {
+  background: var(--secondary-color);
+  border-radius: var(--border-radius);
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+}
+
+.brand-links a,
+.commercial-links a {
+  color: var(--background-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Main Navigation in Overlay */
+.overlay-main-nav {
+  margin-bottom: 2rem;
+}
+
+.overlay-main-nav h3 {
+  color: var(--primary-color);
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.overlay-menu .nav-links {
+  flex-direction: column;
+  gap: 0;
+  align-items: stretch;
+}
+
+.overlay-menu .nav-links li {
+  color: var(--secondary-color);
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all var(--transition-duration);
+}
+
+.overlay-menu .nav-links li:hover {
+  color: var(--primary-color);
+  padding-left: 1rem;
+}
+
+.overlay-menu .nav-links li:last-child {
+  border-bottom: none;
+}
+
+/* Profile Links in Overlay */
+.overlay-menu .profile-links {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.overlay-menu .profile-links a {
+  display: block;
+  text-align: center;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all var(--transition-duration);
+}
+
+.overlay-menu .sign-in-link a {
+  background: transparent;
+  border: 2px solid var(--secondary-color);
+  color: var(--secondary-color);
+}
+
+.overlay-menu .subscribe-link a {
+  background: var(--primary-color);
+  color: var(--secondary-color);
+}
+
+.overlay-menu .sign-in-link a:hover {
+  background: var(--secondary-color);
+  color: var(--background-color);
+}
+
+.overlay-menu .subscribe-link a:hover {
+  background: var(--hover-color);
+}
+
+/* Main Content Styles */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.f1-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.f1-header-bar hr {
+  border: none;
+  border-top: 20px solid var(--primary-color);
+  margin: 0 0 1rem 0;
+}
+
+.f1-header-title h1 {
+  font-size: 8rem;
+  color: var(--secondary-color);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.f1-header-title p {
+  color: var(--primary-color);
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.race-container {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(280px, 1fr));
+  max-width: 1200px;
+  gap: 1rem;
+}
+
+.race-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.race-location-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+}
+
+.race-full-title {
+  font-size: 1rem;
+  color: #999;
+  margin-bottom: 1rem;
+}
+
+.race-podium {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.podium-card {
+  background: #181818;
+  border-radius: 8px;
+  padding: 0.8rem;
+  flex: 1;
+  text-align: center;
+}
+
+.podium-card.first {
+  border-top: 4px solid gold;
+}
+
+.podium-card.second {
+  border-top: 4px solid silver;
+}
+
+.podium-card.third {
+  border-top: 4px solid #cd7f32;
+}
+
+.driver-code {
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 0.5rem 0;
+}
+
+.driver-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.race-time {
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.calendar-icon {
+  margin-right: 4px;
+}
+
+/* Fix flippable race card layout */
+.race-flip {
+  display: block;
+  position: relative;
+  perspective: 1000px;
+  width: 100%;
+  max-width: 350px;
+  height: 200px;
+  /* Ensure consistent height */
+  margin-bottom: 2rem;
+}
+
+.race-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+}
+
+.race-toggle {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.race-card .front,
+.race-card .back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding: 1.5rem;
+  backface-visibility: hidden;
+  border-radius: 10px;
+  background: var(--background-color);
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 2px 8px var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.race-card .back {
+  transform: rotateY(180deg);
+}
+
+.race-toggle:checked~.race-card {
+  transform: rotateY(180deg);
+}
+
+.map-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(5, 5, 5, 0.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  flex-direction: column;
+}
+
+.map-fullscreen {
+  width: 90%;
+  height: 80%;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.map-close-btn {
+  color: white;
+  font-size: 2rem;
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+.view-map-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #e10600;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 0.95em;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.2s;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+  .nav-global {
+    height: 4rem;
+  }
+
+  .nav-main {
+    display: none;
+  }
+
+  .g-brand-links,
+  .g-commercial-links,
+  .g-auth-buttons {
+    display: none;
+  }
+
+  .f1-header-title h1 {
+    font-size: 6rem;
+  }
+
+  .hamburger-menu {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    width: 40px;
+    height: 50px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 12px;
+    z-index: 1001;
+  }
+
+  .hamburger-icon {
+    font-size: 4rem;
+    line-height: 1;
+    color: #000;
+  }
+
+  .mobile-f1-logo {
+    display: block !important;
+    position: absolute;
+    left: 50%;
+    top: 8px;
+    transform: translateX(-50%);
+    z-index: 1000;
+  }
+
+  .race-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+    max-width: 100vw;
+    gap: 0.5rem;
+    padding: 0 1rem;
+  }
+}
+
+.overlay-menu.open {
+  display: block !important;
+
+  .race-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .race-details {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1025px) {
+  .nav-toggle {
+    display: none;
+  }
+
+  .overlay-menu {
+    display: none;
+  }
+
+  .mobile-f1-logo,
+  .hamburger-menu {
+    display: none !important;
+  }
+}
+
+.close-overlay {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 44px;
+  height: 44px;
+  background-color: #e10600;
+  /* F1 red */
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  z-index: 1000;
+}
+
+.close-overlay:hover {
+  background-color: #c00000;
+  transform: scale(1.1);
+}
+
+.map-preview-container {
+  margin-top: 10px;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+#toggleViewBtn {
+  padding: 8px 14px;
+  background-color: #343a40;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#toggleViewBtn:hover {
+  background-color: #23272b;
+}
