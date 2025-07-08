@@ -220,6 +220,8 @@ function focusCameraOn(pos) {
   animate();
 }
 
+let directionPath = [];
+
 renderer.domElement.addEventListener("click", (e) => {
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -227,10 +229,125 @@ renderer.domElement.addEventListener("click", (e) => {
   const hit = raycaster.intersectObjects(markers, true);
   if (hit.length > 0) {
     const marker = hit[0].object;
-    showPopup(marker.userData.label, marker);
-    focusCameraOn(marker.position);
+
+    if (currentMode === "directions") {
+      directionPath.push(marker.position.clone());
+      if (directionPath.length === 2) {
+        const material = new THREE.LineBasicMaterial({ color: 0x00ffff });
+        const geometry = new THREE.BufferGeometry().setFromPoints(
+          directionPath
+        );
+        const line = new THREE.Line(geometry, material);
+        scene.add(line);
+        tempObjects.push(line);
+        directionPath = [];
+      }
+    } else {
+      // normal popup
+      showPopup(marker.userData.label, marker);
+      focusCameraOn(marker.position);
+    }
+  } else if (currentMode === "radius") {
+    const radiusKm = 200; // Adjustable
+    const point = raycaster.ray.direction
+      .clone()
+      .normalize()
+      .multiplyScalar(2.05);
+    const center = pointToLatLng(point);
+
+    const circle = new THREE.Mesh(
+      new THREE.RingGeometry(0.05, 0.051, 64),
+      new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide })
+    );
+    circle.position.copy(point);
+    circle.lookAt(new THREE.Vector3(0, 0, 0));
+    scene.add(circle);
+    tempObjects.push(circle);
+
+    const nearby = markers.filter((m) => {
+      const d = haversineDistance(
+        center.lat,
+        center.lng,
+        m.userData.lat,
+        m.userData.lng
+      );
+      return d <= radiusKm;
+    });
+
+    nearby.forEach((m) => m.material.color.set(0xffff00));
+  } else if (currentMode === "draw") {
+    const point = raycaster.ray.direction
+      .clone()
+      .normalize()
+      .multiplyScalar(2.05);
+
+    const marker = new THREE.Mesh(
+      new THREE.SphereGeometry(0.015, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+    );
+    marker.position.copy(point);
+    scene.add(marker);
+    tempObjects.push(marker);
+
+    if (tempObjects.length > 1) {
+      const last2 = tempObjects.slice(-2).map((m) => m.position);
+      const geometry = new THREE.BufferGeometry().setFromPoints(last2);
+      const line = new THREE.Line(
+        geometry,
+        new THREE.LineBasicMaterial({ color: 0x00ff00 })
+      );
+      scene.add(line);
+      tempObjects.push(line);
+    }
+  }
+  if (currentMode === "cluster") {
+    // Naive clustering for globe
+    for (let i = 0; i < markers.length; i++) {
+      for (let j = i + 1; j < markers.length; j++) {
+        const d = haversineDistance(
+          markers[i].userData.lat,
+          markers[i].userData.lng,
+          markers[j].userData.lat,
+          markers[j].userData.lng
+        );
+        if (d < 100) {
+          // visually connect close markers
+          const geometry = new THREE.BufferGeometry().setFromPoints([
+            markers[i].position,
+            markers[j].position,
+          ]);
+          const line = new THREE.Line(
+            geometry,
+            new THREE.LineBasicMaterial({
+              color: 0xff00ff,
+              transparent: true,
+              opacity: 0.4,
+            })
+          );
+          scene.add(line);
+          tempObjects.push(line);
+        }
+      }
+    }
   }
 });
+function pointToLatLng(vec) {
+  const r = vec.length();
+  const lat = 90 - (Math.acos(vec.y / r) * 180) / Math.PI;
+  const lng = (((Math.atan2(vec.z, -vec.x) * 180) / Math.PI + 360) % 360) - 180;
+  return { lat, lng };
+}
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371; // km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -279,3 +396,17 @@ function animate() {
 }
 
 animate();
+
+let currentMode = "none";
+document.querySelectorAll("input[name='tool']").forEach((radio) => {
+  radio.addEventListener("change", () => {
+    currentMode = radio.value;
+    resetTemporaryObjects();
+  });
+});
+
+const tempObjects = []; // holds temporary visuals (circles, lines, drawings)
+function resetTemporaryObjects() {
+  tempObjects.forEach((obj) => scene.remove(obj));
+  tempObjects.length = 0;
+}

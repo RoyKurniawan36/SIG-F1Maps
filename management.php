@@ -772,7 +772,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["cancel_subscription"]
           <button class="close-btn" aria-label="Close forgot      password" onclick="closeForgotPassword()">×</button>
           <h1 id="forgot-password-heading"      class="form-heading">Reset your password</h1>
 
-          <form id="forgetPasswordForm" action="admin/reset_password.php" method="post" novalidate>
+          <form id="forgetPasswordForm" action="../admin/reset_password.php" method="post" novalidate>
             <p>To reset your password, please enter your email      and new password below.</p>
             <!-- Email -->
             <div class="field">
